@@ -7,6 +7,9 @@ from torch import nn
 # Code took from: https://github.com/mattsherar/Temporal_Fusion_Transform/blob/master/tft_model.py
 
 class QuantileLoss(nn.Module):
+    """
+    Quantile Loss Function
+    """
 
     def __init__(self, quantiles):
         super().__init__()
@@ -198,14 +201,38 @@ class VariableSelectionNetwork(nn.Module):
 
 
 class TFT(nn.Module):
+    """
+    Temporal Fusion Transformer Model
+    """
 
     def __init__(self, config):
+        """
+
+        :param config: configuration's dictionary of the model.
+                       The keys of the dictionary are:
+                       - device: the device where to load the model
+                       - batch_size: the batch size
+                       - static_variables: number of static variables
+                       - encode_length: the encoder's lenght
+                       - time_varying_categoical_variables: the length of the time varying categorical variables
+                       - time_varying_real_variables_encoder: the length of time varying real variables of the encoder
+                       - time_varying_real_variables_decoder: the length of time varying real variables of the decoder
+                       - num_masked_series:
+                       - lstm_hidden_dimension: the hidden dimension of the econder/decode lstm
+                       - lstm_layers: the number of layers of the encoder/decoder lstm
+                       - dropout: the dropout rate
+                       - embedding_dim: the dimension of the embedding layer
+                       - attn_heads: the number of attention heads
+                       - num_quantiles: the number of quantiles of the network
+                       - vailid_quantiles: the quantiles the network has to predict
+                       - seq_length: the input sequence length
+        """
         super(TFT, self).__init__()
         self.device = config['device']
         self.batch_size = config['batch_size']
         self.static_variables = config['static_variables']
         self.encode_length = config['encode_length']
-        self.time_varying_categoical_variables = config['time_varying_categoical_variables']
+        self.time_varying_categorical_variables = config['time_varying_categorical_variables']
         self.time_varying_real_variables_encoder = config['time_varying_real_variables_encoder']
         self.time_varying_real_variables_decoder = config['time_varying_real_variables_decoder']
         self.num_input_series_to_mask = config['num_masked_series']
@@ -215,7 +242,7 @@ class TFT(nn.Module):
         self.embedding_dim = config['embedding_dim']
         self.attn_heads = config['attn_heads']
         self.num_quantiles = config['num_quantiles']
-        self.valid_quantiles = config['vailid_quantiles']
+        self.valid_quantiles = config['valid_quantiles']
         self.seq_length = config['seq_length']
 
         self.static_embedding_layers = nn.ModuleList()
@@ -224,7 +251,7 @@ class TFT(nn.Module):
             self.static_embedding_layers.append(emb)
 
         self.time_varying_embedding_layers = nn.ModuleList()
-        for i in range(self.time_varying_categoical_variables):
+        for i in range(self.time_varying_categorical_variables):
             emb = TimeDistributed(
                 nn.Embedding(config['time_varying_embedding_vocab_sizes'][i], config['embedding_dim']),
                 batch_first=True).to(self.device)
@@ -308,7 +335,7 @@ class TFT(nn.Module):
 
         ##Time-varying categorical embeddings (ie hour)
         time_varying_categoical_vectors = []
-        for i in range(self.time_varying_categoical_variables):
+        for i in range(self.time_varying_categorical_variables):
             emb = self.time_varying_embedding_layers[i](
                 x[:, :, self.time_varying_real_variables_encoder + i].view(x.size(0), -1, 1).long())
             time_varying_categoical_vectors.append(emb)
@@ -344,11 +371,19 @@ class TFT(nn.Module):
         return output, hidden
 
     def forward(self, x, static):
+        """
+
+        :param x: time varying real variables
+        :param static: static variables
+        :return:  the transformer output, the transformer encoder's output, the decoder's output,
+                  the attention module output, the attention weights, the encoder's sparse weights,
+                  the decoder's sparse weights
+        """
 
         ##inputs should be in this order
         # static
-        # time_varying_categorical
         # time_varying_real
+        # time_varying_categorical
 
         embedding_vectors = []
         for i in range(self.static_variables):
