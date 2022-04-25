@@ -264,24 +264,24 @@ class TFT(nn.Module):
 
         self.encoder_variable_selection = VariableSelectionNetwork(config['embedding_dim'],
                                                                    (config['time_varying_real_variables_encoder'] +
-                                                                    config['time_varying_categoical_variables']),
+                                                                    config['time_varying_categorical_variables']),
                                                                    self.hidden_size,
                                                                    self.dropout,
                                                                    config['embedding_dim'] * config['static_variables'])
 
         self.decoder_variable_selection = VariableSelectionNetwork(config['embedding_dim'],
                                                                    (config['time_varying_real_variables_decoder'] +
-                                                                    config['time_varying_categoical_variables']),
+                                                                    config['time_varying_categorical_variables']),
                                                                    self.hidden_size,
                                                                    self.dropout,
                                                                    config['embedding_dim'] * config['static_variables'])
 
         self.lstm_encoder_input_size = config['embedding_dim'] * (config['time_varying_real_variables_encoder'] +
-                                                                  config['time_varying_categoical_variables'] +
+                                                                  config['time_varying_categorical_variables'] +
                                                                   config['static_variables'])
 
         self.lstm_decoder_input_size = config['embedding_dim'] * (config['time_varying_real_variables_decoder'] +
-                                                                  config['time_varying_categoical_variables'] +
+                                                                  config['time_varying_categorical_variables'] +
                                                                   config['static_variables'])
 
         self.lstm_encoder = nn.LSTM(input_size=self.hidden_size,
