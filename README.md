@@ -20,3 +20,7 @@ from tft.utils import TSDataset
 ## Example Notebooks
 
 - [Italian Electricity Price forecasting](notebooks/electricity-prices-forecasting.ipynb)
+
+## Author 
+
+Paolo D'Elia
